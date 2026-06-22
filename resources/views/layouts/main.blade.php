@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!--<link rel="stylesheet" href="{{ asset('css/app.css') }}">-->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -45,9 +46,51 @@
                                 <a class="dropdown-item" href="#">Telegram</a>
                             </div>
                         </li>
+                        @can('view', App\Models\User::class)
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.ad.index') }}">Admin panel</a>
+                            </li>
+                        @endcan
                         <li class="nav-item">
                             <a class="btn btn-primary" href="{{ route('ad.create') }}">Create ad</a>
                         </li>
+                        @guest
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('home') }}">Log in</a>
+                        </li>
+                        @endguest
+                        @auth
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('favAdsIndex') }}">Favourites</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('chats') }}">Chats</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               href="#"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                {{ auth()->user()->name }}
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#">Profile</a>
+                                <a class="dropdown-item" href="{{ route('my_ads') }}">My ads</a>
+                                <a class="dropdown-item" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault();
+                                                    document.getElementById('logout-form').submit();">
+                                    {{ __('Logout') }}
+                                </a>
+
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                                
+                                <!-- <a class="dropdown-item" href="#">Log out</a> -->
+                            </div>
+                        </li>
+                        @endauth
                     </ul>
                 </div>
             </nav>
@@ -60,6 +103,22 @@
 {{--                </ul>--}}
 {{--            </nav>--}}
         </div>
+
+
+
+
+
+
+        <!-- <div id="app">
+            <test-component></test-component>
+        </div> -->
+
+
+
+
+
+
+
         @yield('content')
     </div>
 </body>

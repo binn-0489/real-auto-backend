@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Filters\AdFilter;
 use App\Http\Requests\FilterRequest;
-use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Brand;
 use App\Http\Requests\StoreRequest;
@@ -12,6 +13,7 @@ use App\Http\Requests\StoreRequest;
 
 class AdController extends Controller
 {
+
     public function index(FilterRequest $request){
 //        $brand = Brand::find(6);
 //        dd($brand->ads);
@@ -24,6 +26,13 @@ class AdController extends Controller
         return view('ad.index', compact('ads'));
     }
 
+    public function recIndex(RecommendationService $service)
+    {   
+        $ads = $service->getRecommendations(auth()->user());
+
+        return view('ad.index', compact('ads'));
+    }
+
     public function create()
     {
         $brands = Brand::all();
@@ -32,15 +41,42 @@ class AdController extends Controller
 
     public function store(StoreRequest $request)
     {
-        $data = $request->validated();
-        $data['user_id'] = 1;
-        Ad::create($data);
-        //Ad::create($data);
-        return redirect()->route('ad.index');
+        $ad = DB::transaction(function () use ($request) {
+            $data = $request->validated();
+
+            $ad = auth()->user()->ads()->create($data);
+
+            if($request->hasFile('images')){ 
+                foreach ($request->file('images') as $index => $image){
+                    $path = $image->store('ads', 'public');
+
+                    $ad->images()->create([
+                        'path' => $path,
+                        'is_main' => (int)$request->main_image === $index,
+                    ]);
+                }
+            }
+            return $ad;
+        });
+        return redirect()->route('ad.show', $ad/*->id*/);
     }
 
     public function show(Ad $ad)
     {
+        // if (auth()->check()) {
+
+        //     $exists = AdView::where('user_id', auth()->id())
+        //         ->where('ad_id', $ad->id)
+        //         ->where('created_at', '>=', now()->subMinutes(30))
+        //         ->exists();
+        
+        //     if (!$exists) {
+        //         AdView::create([
+        //             'user_id' => auth()->id(),
+        //             'ad_id' => $ad->id,
+        //         ]);
+        //     }
+        // }
         //$ad = Ad::findOrFail($id);
         return view('ad.show', compact('ad'));
     }
@@ -56,21 +92,40 @@ class AdController extends Controller
         $data = $request->validated();
         $ad->update($data);
         //Ad::factory()->create($data);
-        return redirect()->route('ad.show', $ad->id);
 
-//        $ad = Ad::find(1);
-//        $ad->update(
-//            [
-//                'brand' => 'updated',
-//                'model' => 'updated',
-//            ]
-//        );
+
+        if($request->hasFile('images'))
+        {
+            foreach($request->file('images') as $index => $image){
+                $path = $image->store('ads', 'public');
+                $ad->images()->create([
+                    'is_main' => (int)$request->main_image === $index,
+                    'path' => $path,
+                ]);
+            }
+        }
+        return redirect()->route('ad.show', $ad->id);
+    }
+
+    public function myAdsIndex(FilterRequest $request)
+    {
+        $data = $request->validated();
+
+        $filter = app()->make(AdFilter::class, ['queryParams' => array_filter($data)]);
+
+        $ads = Ad::with('brand')
+        ->where('user_id', auth()->id())
+        ->filter($filter)
+        ->paginate(10)
+        ->withQueryString();;
+
+        return view('ad.myAdIndex', compact('ads'));
     }
 
     public function destroy(Ad $ad)
     {
         $ad->delete();
-        return redirect()->route('ad.index');
+        return redirect()->route('ad.myAdIndex');
     }
     public function delete(Ad $ad)
     {
@@ -139,4 +194,78 @@ class AdController extends Controller
         dump($ad->model);
         dd('end');
     }
+
+
+    public function addFav(Ad $ad)
+    {
+        // 'user_id' => auth()->id(),
+        // 'ad_id' => $ad->id,
+        auth()->user()->favourites()->syncWithoutDetaching($ad->id);
+        return redirect()->back();
+    }
+
+    public function remFav(Ad $ad)
+    {
+        auth()->user()->favourites()->detach($ad->id);
+        return redirect()->back();
+    }
+
+    public function favAdsIndex(FilterRequest $request)
+    {
+        $data = $request->validated();
+
+        $filter = app()->make(AdFilter::class, ['queryParams' => array_filter($data)]);
+
+        $ads = auth()->user()
+        ->favourites()
+        ->with('brand')
+        ->filter($filter)
+        ->paginate(10)
+        ->withQueryString();
+        
+        // $ads = Ad::with('brand')
+        // ->favourites()
+        // ->filter($filter)
+        // ->paginate(10)
+        // ->withQueryString();;
+
+        return view('ad.favIndex', compact('ads'));
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    //------------------------------тут начинается функционал тг бота------------------------------//
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    public function apiIndex(FilterRequest $request)
+{
+    $data = $request->validated();
+    $filter = app()->make(AdFilter::class, [
+        'queryParams' => array_filter($data)
+    ]);
+
+    $ads = Ad::with('brand')
+        ->filter($filter)
+        ->limit(10)
+        ->get();
+
+    return response()->json($ads);
+}
 }

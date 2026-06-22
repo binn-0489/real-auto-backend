@@ -1,7 +1,7 @@
 @extends('layouts.main')
 @section('content')
     <div>
-        <form action="{{ route('ad.update', $ad->id) }}" method="post">
+        <form action="{{ route('ad.update', $ad->id) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PATCH')
             <div class="mb-3">
@@ -30,7 +30,55 @@
                 <p class="text-danger"> {{ $message }}</p>
                 @enderror
             </div>
+            <div>
+                <h3>Images</h3>
+
+                @foreach($ad->images as $image)
+                    <div class="image-block" style="display:inline-block; margin:10px;">
+                        <img src="{{ asset('storage/' . $image->path) }}" width="150">
+
+                        <button type="button" class="btn btn-danger delete-image" data-id="{{$image->id}}">Delete</button>
+                    </div>
+                @endforeach
+                <div>
+                    <label>Добавить новые изображения</label>
+                    <input type="file" id='images' class="form-control" name="images[]" accept=".jpg,.jpeg,.png" multiple>
+                    </div>  
+            </div>
+
             <button type="submit" class = "btn btn-primary">Update</button>
         </form>
     </div>
+
+
+<script>
+console.log('script loaded');
+document.querySelectorAll('.delete-image').forEach(button => {
+    button.addEventListener('click', function () {
+
+        const imageId = this.dataset.id;
+        const block = this.closest('.image-block');
+
+        if (!confirm('Удалить изображение?')) return;
+
+        fetch(`/ad_images/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                block.remove(); // удаляем картинку со страницы
+            }
+        })
+        .catch(error => console.error(error));
+    });
+});
+</script>
+
+
+
 @endsection

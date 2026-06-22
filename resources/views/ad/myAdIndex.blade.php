@@ -1,9 +1,5 @@
 @extends('layouts.main')
 @section('content')
-    <div id="app">
-        <ads-page></ads-page>
-    </div>
-    <div>///////////////////////////////////////////////////</div>
     <div>
         <table class="table">
             <thead>
@@ -13,6 +9,7 @@
                 <th scope="col">Model</th>
                 <th scope="col">Year</th>
                 <th scope="col">Price</th>
+                <th scope="col"></th>
             </tr>
             </thead>
             <tbody>
@@ -24,6 +21,16 @@
                     <td>{{ $ad->model }}</td>
                     <td>{{ $ad->year }}</td>
                     <td>{{ $ad->price }}</td>
+                    <td>
+                        <div><a href=" {{ route('ad.edit', $ad->id) }}" class="btn btn-secondary">edit</a></div>
+                        <div>
+                            <form action="{{route('ad.delete', $ad->id)}}" method="post">
+                                @csrf
+                                @method('delete')
+                                <input type="submit" value="delete" class="btn btn-danger">
+                            </form>
+                        </div>
+                    </td>
 
                     <div class="mt-4">
                         @foreach($ad->images as $image)

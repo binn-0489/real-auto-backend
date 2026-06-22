@@ -26,6 +26,7 @@ class StoreRequest extends FormRequest
             'generation' => 'required|string',
             'year' => 'required|int',
             'brand_id' => 'required|int|exists:brands,id',
+            'price' => 'required|int',
         ];
     }
 }

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Ad extends Model
 {
     use HasFactory;
@@ -47,6 +46,26 @@ class Ad extends Model
     public function brand()
     {
         return $this->belongsTo(\App\Models\Brand::class, 'brand_id', 'id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(AdImage::class);
+    }
+
+    public function favouritedBy()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'favourites',
+            'ad_id',
+            'user_id'
+        );
+    }
+
+    public function views()
+    {
+        return $this->hasMany(AdView::class);
     }
 
 }

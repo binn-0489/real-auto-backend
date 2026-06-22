@@ -1,7 +1,7 @@
 @extends('layouts.main')
 @section('content')
     <div>
-        <form action="{{ route('ad.store') }}" method="post">
+        <form action="{{ route('ad.store') }}" method="post" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
                 <label for="brand_id" class="form-label">Brand</label>
@@ -29,6 +29,41 @@
                 @error('year')
                 <p class="text-danger"> {{ $message }}</p>
                 @enderror
+                <label for="price" class="form-label">Price</label>
+                <input type="number" name="price" class="form-control" id="price" value="{{ old('price') }}">
+                @error('price')
+                <p class="text-danger"> {{ $message }}</p>
+                @enderror
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <label for="images" class="form-label">Photos</label>
+                <input type="file" id='images' class="form-control" name="images[]" accept=".jpg,.jpeg,.png" multiple>
+                
+                <input type="radio" name="main_image" value="0">
+                <input type="radio" name="main_image" value="1">
+                <!--<label class="input-group-text" for="inputGroupFile02">Upload</label>-->
+
+                <!--<input type="file" name='images[]' accept=".jpg,.jpeg,.png" multiple>-->
+
             </div>
             <button type="submit" class = "btn btn-primary">Submit</button>
         </form>

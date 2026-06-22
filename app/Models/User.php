@@ -9,9 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -22,7 +20,6 @@ class User extends Authenticatable
         'email',
         'password',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -32,7 +29,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-
     /**
      * Get the attributes that should be cast.
      *
@@ -52,4 +48,18 @@ class User extends Authenticatable
         return $this->hasMany(Ad::class)->orderBy('created_at');
     }
 
+    public function favourites()
+    {
+        return $this->belongsToMany(
+            Ad::class,
+            'favourites',
+            'user_id',
+            'ad_id'
+        );
+    }
+
+    public function adViews()
+    {
+        return $this->hasMany(AdView::class);
+    }
 }
